@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="WebPic v1">
+    <meta name="author" content="fragarie">
+    <title>WebPic</title>
+
+    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
+</head>
+<body>
+	<header>
+		<h1>Заголовок 1</h1>
+	</header>
+
+	<main>
+		<canvas id="canvas"></canvas>
+	</main>
+
+    <footer>
+    </footer>
+
+
+    <script src="/static/dependencies/socket-io/socket.io.min.js"></script>
+	<script src="{{ url_for('static', filename='js/base.js') }}"></script>
+</body>
+</html>
