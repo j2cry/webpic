@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="WebPic v1">
+    <meta name="author" content="fragarie">
+    <title>WebPic</title>
+
+    <link href="{{ url_for('static', filename='dependencies/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/common.css') }}" rel="stylesheet">
+{#    <link href="{{ url_for('static', filename='css/coloring.css') }}" rel="stylesheet">#}
+</head>
+<body>
+	<header class="sticky-top">
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ url['home'] }}">
+                    <img src="{{ url_for('static', filename='icons/logo.svg') }}" alt="WebPic">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a id="libraryLink" class="nav-link active" href="{{ url['home'] }}">Library</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled">Disabled</a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="debugLink" class="nav-link" href="#">Debug</a>
+                        </li>
+                    </ul>
+{#                    <button id="logoutBtn" class="btn btn-sm btn-danger disabled">Logout</button>#}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+	<main>
+        {% include page %}
+	</main>
+
+    <footer class="bg-dark fixed-bottom text-center py-2">
+        <span class="text-muted small">
+            &copy; Copyright 2022 fragarie
+        </span>
+    </footer>
+
+	<script src="{{ url_for('static', filename='dependencies/bootstrap/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='dependencies/socket-io/socket.io.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import os
 import pickle
 import numpy as np
 import cv2 as cv
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 
 # read configuration file
@@ -14,16 +14,37 @@ HOST = config['URLS']['host']
 PORT = int(config['URLS']['port'])
 SERVICE_URL = pathlib.Path('/', config['URLS']['service']).as_posix()
 
+# prepare template parameters
+url = {
+    'home': SERVICE_URL,
+}
+
 # prepare Flask
-app = Flask(__name__)
+app = Flask(__name__, static_url_path=f'{SERVICE_URL}/static')
+# app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(40).hex()
 sock = SocketIO(app)
+
+
+def get_page(page, **kwargs):
+    return render_template('index.jinja2', url=url, page=page, **kwargs)
 
 
 # Flask routes
 @app.route(SERVICE_URL)
 def index():
-    return render_template('base.jinja2')
+    return get_page('library.jinja2')
+
+
+@app.route(f'{SERVICE_URL}/upload')
+def upload():
+    return render_template('index.jinja2', url=url, page='upload.jinja2')
+    # return get_page('upload.jinja2')
+
+
+@app.route(f'{SERVICE_URL}/<path>')
+def coloring(path: str):
+    return get_page('coloring.jinja2')
 
 
 # socket routes
@@ -36,6 +57,12 @@ def on_canvas_click(point):
     collision = np.where(np.array([cv.pointPolygonTest(ct, point, False) for ct in contours]) >= 0)[0]
     contour_index = int(collision[hierarchy[0, collision, 3].argmax()]) if collision.size else -1
     return contours[contour_index].tolist()
+
+
+@sock.on('connect')
+def connect():
+    sid = getattr(request, 'sid')
+    print(f'sid={sid} connected')
 
 
 if __name__ == '__main__':

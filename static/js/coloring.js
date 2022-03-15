@@ -1,7 +1,3 @@
-const canvas = document.getElementById('canvas');
-const socket = io();
-
-
 function drawPicture(ctx, sourcePath) {
     let image = new Image();
     image.onload = function () {
@@ -32,8 +28,10 @@ function drawContour(ctx, points, sourcePath) {
 }
 
 
-// on document is ready
-window.onload = function () {
+// add on document load listener
+window.addEventListener('load', function () {
+    const canvas = document.getElementById('canvas');
+
     // check compatibility
     if (!canvas.getContext) {
         alert("Your browser doesn't support canvas.");
@@ -50,4 +48,4 @@ window.onload = function () {
         });
     }
     drawPicture(context, 'static/media/testpic_contours.jpg');
-}
+});

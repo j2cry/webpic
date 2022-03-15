@@ -1,0 +1,31 @@
+body {
+    background: #6c757d;
+}
+
+header img {
+    width: 1.75em;
+    height: 1.75em;
+}
+
+.library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 10em);
+    grid-gap: 0.75rem;
+    justify-content: space-around;
+    align-items: center;
+    margin: 0.75em;
+}
+
+.pic-item {
+    width: 100%;
+}
+
+.pic-item:hover {
+    outline: 2px solid #0c63e4;
+}
+
+canvas {
+    width: 100%;
+    height: auto;
+    outline: 3px solid black;
+}
