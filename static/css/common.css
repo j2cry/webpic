@@ -29,3 +29,7 @@ canvas {
     height: auto;
     outline: 3px solid black;
 }
+
+input[type=range] {
+    margin-left: 0.25em;
+}
