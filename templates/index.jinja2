@@ -49,6 +49,10 @@
         </span>
     </footer>
 
+    <div id="loading-indicator">
+        <img src="{{ url_for('static', filename='icons/loading.svg') }}" alt="Loading...">
+    </div>
+
 	<script src="{{ url_for('static', filename='dependencies/bootstrap/bootstrap.bundle.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='dependencies/socket-io/socket.io.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/index.js') }}"></script>

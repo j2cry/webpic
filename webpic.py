@@ -44,6 +44,7 @@ def upload():
     elif request.method == 'POST':
         if not (file := request.files.get('file', None)) or not file.filename:
             return 'No file selected'
+        # TODO: create `images/` dir if not exists
         file.save(pathlib.Path(UPLOAD_FOLDER, secure_filename(file.filename)).as_posix())
         return redirect(SERVICE_URL)
 

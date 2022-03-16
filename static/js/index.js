@@ -1,4 +1,5 @@
 let socket = io();    // init socket connection
+let loadingIndicator = document.getElementById('loading-indicator');
 
 // on document is ready
 window.addEventListener('load',function () {
@@ -16,4 +17,7 @@ window.addEventListener('load',function () {
     document.getElementById('debugLink').onclick = function () {
         console.log('debug clicked');
     }
+
+    // hide loading indicator
+    loadingIndicator.hidden = true;
 });

@@ -1,6 +1,5 @@
-<div class="bg-dark p-2 d-flex justify-content-between">
+<div class="bg-dark p-2 d-flex">
     <input id="imagePathInput" type="file" accept="image/*" class="form-control-file text-light">
-    <button id="uploadBtn" class="btn btn-sm btn-outline-light disabled">upload</button>
 </div>
 
 <div class="container">
@@ -9,37 +8,37 @@
         <div class="flex-column flex-fill mx-1">
             <div class="d-flex">
                 <label for="rangeBlur" class="form-label">Blur</label>
-                <input type="range" class="form-range" id="rangeBlur" min="1" max="255" value="5">
+                <input type="range" class="form-range" id="rangeBlur" min="1" max="255" value="5" disabled>
             </div>
         </div>
 
         <div class="flex-column flex-fill mx-1">
             <div class="d-flex">
                 <label for="rangeR1" class="form-label">R1</label>
-                <input type="range" class="form-range" id="rangeR1" min="0" max="255" value="0">
+                <input type="range" class="form-range" id="rangeR1" min="0" max="255" value="0" disabled>
             </div>
             <div class="d-flex">
                 <label for="rangeG1" class="form-label">G1</label>
-                <input type="range" class="form-range" id="rangeG1" min="0" max="255" value="0">
+                <input type="range" class="form-range" id="rangeG1" min="0" max="255" value="0" disabled>
             </div>
             <div class="d-flex">
                 <label for="rangeB1" class="form-label">B1</label>
-                <input type="range" class="form-range" id="rangeB1" min="0" max="255" value="0">
+                <input type="range" class="form-range" id="rangeB1" min="0" max="255" value="0" disabled>
             </div>
         </div>
 
         <div class="flex-column flex-fill mx-1">
             <div class="d-flex">
                 <label for="rangeR2" class="form-label">R2</label>
-                <input type="range" class="form-range" id="rangeR2" min="0" max="255" value="0">
+                <input type="range" class="form-range" id="rangeR2" min="0" max="255" value="255" disabled>
             </div>
             <div class="d-flex">
                 <label for="rangeG2" class="form-label">G2</label>
-                <input type="range" class="form-range" id="rangeG2" min="0" max="255" value="0">
+                <input type="range" class="form-range" id="rangeG2" min="0" max="255" value="255" disabled>
             </div>
             <div class="d-flex">
                 <label for="rangeB2" class="form-label">B2</label>
-                <input type="range" class="form-range" id="rangeB2" min="0" max="255" value="0">
+                <input type="range" class="form-range" id="rangeB2" min="0" max="255" value="255" disabled>
             </div>
         </div>
     </div>
@@ -52,5 +51,6 @@
     <button id="saveImageBtn" class="btn btn-success disabled">Save</button>
 </div>
 
+<script async src="{{ url_for('static', filename='dependencies/opencv/opencv.js') }}"></script>
 <script src="{{ url_for('static', filename='js/drawing.js') }}"></script>
 <script src="{{ url_for('static', filename='js/upload.js') }}"></script>

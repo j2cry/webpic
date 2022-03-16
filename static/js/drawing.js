@@ -1,9 +1,41 @@
-function drawPicture(ctx, sourcePath) {
+function drawPicture(ctx, sourcePath, filters) {
     let image = new Image();
     image.onload = function () {
+        // TODO: add pre-scaling if size is more than required
         ctx.canvas.width = image.width;
         ctx.canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
+        // apply filters
+        if (filters !== undefined) {
+            let originalImage = cv.imread(ctx.canvas);
+            let filteredImage = new cv.Mat();
+            // parse filters
+            let blur = filters['rangeBlur'];
+            let low = [filters['rangeB1'], filters['rangeG1'], filters['rangeR1'], 0]
+            let high = [filters['rangeB2'], filters['rangeG2'], filters['rangeR2'], 255]
+            low = new cv.Mat(originalImage.rows, originalImage.cols, originalImage.type(), low);
+            high = new cv.Mat(originalImage.rows, originalImage.cols, originalImage.type(), high);
+            // apply filters
+            cv.blur(originalImage, filteredImage, new cv.Size(blur, blur));
+            cv.inRange(filteredImage, low, high, filteredImage);
+            // cv.cvtColor(originalImage, filteredImage, cv.COLOR_RGBA2GRAY, 0);
+            // TODO: how to make `master` contour?
+
+            let contours = new cv.MatVector();
+            let hierarchy = new cv.Mat();
+            let color = new cv.Scalar(0, 0, 255);       // TODO: add contour color selector
+            // TODO: add selector `show background`
+            cv.findContours(filteredImage, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+            for (let i = 0; i < contours.size(); i++) {
+                cv.drawContours(originalImage, contours, i, color, 1, cv.LINE_AA, hierarchy, 100);
+            }
+
+            // cv.imshow(ctx.canvas, filteredImage);
+            cv.imshow(ctx.canvas, originalImage);
+            // is this required?
+            originalImage.delete(); filteredImage.delete();
+            low.delete(); high.delete();
+        }
     }
     image.src = sourcePath;
 }

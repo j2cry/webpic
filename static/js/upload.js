@@ -1,34 +1,46 @@
+function collectFilters(filterInputs) {
+    let filters = {}
+    filterInputs.forEach(function (inputElement) {
+        filters[inputElement.id] = parseInt(inputElement.value);
+    });
+    return filters
+}
+
 // add on document load listener
 window.addEventListener('load', function () {
-    let imagePathInput = document.getElementById('imagePathInput');
-    let uploadBtn = document.getElementById('uploadBtn');
+    let selectedFile = null;
     let saveImageBtn = document.getElementById('saveImageBtn');
+    let filterInputs = document.querySelectorAll('input[type=range]');
     let canvas = document.getElementById('preview');
     let context = canvas.getContext('2d');
 
-    // enable buttons on file input change
-    imagePathInput.onchange = function () {
-        if (this.value)
-            uploadBtn.classList.remove('disabled');
-        else
-            uploadBtn.classList.add('disabled');
+    // on file input change
+    document.getElementById('imagePathInput').onchange = function () {
+        selectedFile = this.files[0];
+        // collect and apply filters
+        let filters = collectFilters(filterInputs);
+        drawPicture(context, window.URL.createObjectURL(selectedFile), filters);
+        // enable filter controls
+        saveImageBtn.classList.remove('disabled');
+        filterInputs.forEach(function (inputElement) {
+            inputElement.removeAttribute('disabled');
+        });
     }
 
-    // upload button click
-    uploadBtn.onclick = function () {
-        // console.log('uploading image');
-        const selectedFile = imagePathInput.files[0];
-        drawPicture(context, window.URL.createObjectURL(selectedFile));
-        saveImageBtn.classList.remove('disabled');
-    }
+    // image filtering
+    filterInputs.forEach(function (inputElement) {
+        inputElement.onchange = function () {
+            console.log(this.id, 'was set to', this.value);
+            let filters = collectFilters(filterInputs);
+            drawPicture(context, window.URL.createObjectURL(selectedFile), filters);
+        }
+    });
 
     // save button click
     saveImageBtn.onclick = function () {
-        // TODO: image saving
+        // TODO: saving contours (picture+data), hierarchy
         console.log('saving image');
-        const selectedFile = imagePathInput.files[0];
-
-        // upload source image
+        // send source file to the server
         const formData = new FormData();
         formData.append('file', selectedFile);
         fetch(window.location.href, {
@@ -40,14 +52,6 @@ window.addEventListener('load', function () {
             console.error(err);
         });
     }
-
-    // image filtering
-    document.querySelectorAll('input[type=range]').forEach(function (control) {
-        control.onchange = function () {
-            console.log(this.id, 'is set to', this.value);
-            // refresh preview
-        }
-    });
 });
 
 
