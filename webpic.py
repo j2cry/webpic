@@ -4,8 +4,9 @@ import os
 import pickle
 import numpy as np
 import cv2 as cv
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_socketio import SocketIO
+from werkzeug.utils import secure_filename
 
 # read configuration file
 config = configparser.ConfigParser()
@@ -13,6 +14,7 @@ config.read('webpic.conf')
 HOST = config['URLS']['host']
 PORT = int(config['URLS']['port'])
 SERVICE_URL = pathlib.Path('/', config['URLS']['service']).as_posix()
+UPLOAD_FOLDER = config['FOLDERS']['upload']
 
 # prepare template parameters
 url = {
@@ -21,7 +23,6 @@ url = {
 
 # prepare Flask
 app = Flask(__name__, static_url_path=f'{SERVICE_URL}/static')
-# app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(40).hex()
 sock = SocketIO(app)
 
@@ -36,10 +37,15 @@ def index():
     return get_page('library.jinja2')
 
 
-@app.route(f'{SERVICE_URL}/upload')
+@app.route(f'{SERVICE_URL}/upload', methods=['GET', 'POST'])
 def upload():
-    return render_template('index.jinja2', url=url, page='upload.jinja2')
-    # return get_page('upload.jinja2')
+    if request.method == 'GET':
+        return get_page('upload.jinja2')
+    elif request.method == 'POST':
+        if not (file := request.files.get('file', None)) or not file.filename:
+            return 'No file selected'
+        file.save(pathlib.Path(UPLOAD_FOLDER, secure_filename(file.filename)).as_posix())
+        return redirect(SERVICE_URL)
 
 
 @app.route(f'{SERVICE_URL}/<path>')
