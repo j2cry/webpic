@@ -1,12 +1,16 @@
 // add on document load listener
 window.addEventListener('load', function () {
-    // enable upload button on file input change
+    // enable buttons on file input change
     document.getElementById('imagePathInput').onchange = function () {
         let uploadBtn = document.getElementById('uploadBtn');
-        if (this.value)
-            uploadBtn.classList.remove('disabled')
-        else
-            uploadBtn.classList.add('disabled')
+        let saveImageBtn = document.getElementById('saveImageBtn');
+        if (this.value) {
+            uploadBtn.classList.remove('disabled');
+            saveImageBtn.classList.remove('disabled');
+        } else {
+            uploadBtn.classList.add('disabled');
+            saveImageBtn.classList.add('disabled');
+        }
     }
 
     // upload button click
