@@ -1,3 +1,4 @@
+import base64
 import pathlib
 import configparser
 import os
@@ -15,6 +16,7 @@ HOST = config['URLS']['host']
 PORT = int(config['URLS']['port'])
 SERVICE_URL = pathlib.Path('/', config['URLS']['service']).as_posix()
 UPLOAD_FOLDER = config['FOLDERS']['upload']
+REDIRECT_ON_SAVE = int(config['BEHAVIOR']['redirect_on_save'])
 
 # prepare template parameters
 url = {
@@ -25,6 +27,10 @@ url = {
 app = Flask(__name__, static_url_path=f'{SERVICE_URL}/static')
 app.config['SECRET_KEY'] = os.urandom(40).hex()
 sock = SocketIO(app)
+
+# prepare folders
+if not pathlib.Path(UPLOAD_FOLDER).exists():
+    os.mkdir(UPLOAD_FOLDER)
 
 
 def get_page(page, **kwargs):
@@ -39,14 +45,23 @@ def index():
 
 @app.route(f'{SERVICE_URL}/upload', methods=['GET', 'POST'])
 def upload():
+    """ GET: Show upload page
+        POST: Receive new images and contours from client """
     if request.method == 'GET':
         return get_page('upload.jinja2')
     elif request.method == 'POST':
-        if not (file := request.files.get('file', None)) or not file.filename:
+        # check incoming data
+        source_file = request.files.get('source_file', None)
+        filtered_image_data = request.form.get('filtered_image_data', None)
+        if not (source_file and filtered_image_data) or not source_file.filename:
             return 'No file selected'
-        # TODO: create `images/` dir if not exists
-        file.save(pathlib.Path(UPLOAD_FOLDER, secure_filename(file.filename)).as_posix())
-        return redirect(SERVICE_URL)
+        # save images
+        filename = secure_filename(source_file.filename)
+        source_file.save(pathlib.Path(UPLOAD_FOLDER, f'source_{filename}').as_posix())
+        with open(pathlib.Path(UPLOAD_FOLDER, f'mask_{filename[:filename.rindex(".")]}.png').as_posix(), 'wb') as fd:
+            fd.write(base64.decodebytes(filtered_image_data.split(',')[1].encode()))
+
+        return redirect(SERVICE_URL) if REDIRECT_ON_SAVE else 'ok'
 
 
 @app.route(f'{SERVICE_URL}/<path>')

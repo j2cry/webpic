@@ -7,6 +7,7 @@ window.addEventListener('load', function () {
     // update library
     // document.getElementById('library')
     // TODO: update library
+    // TODO: removing items
 });
 
 
