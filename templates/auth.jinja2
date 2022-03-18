@@ -1,0 +1,16 @@
+<div class="centred-popup">
+    <form method="post">
+        <input id="username" name="username" class="form-control mb-2" placeholder="login" aria-label="username">
+        <input id="password" type="password" name="password" class="form-control mb-2" placeholder="password" aria-label="password">
+        <div id="auth-response" class="auth-response-text text-center mb-2" hidden></div>
+        <div class="d-flex justify-content-between align-content-center">
+            <div class="form-check-inline">
+                <input id="remember" name="remember" type="checkbox" class="form-check-input ms-1">
+                <label for="remember" class="form-check-label">remember me</label>
+            </div>
+            <button id="submitBtn" type="button" class="btn btn-sm btn-outline-success">submit</button>
+        </div>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>

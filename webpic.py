@@ -7,6 +7,8 @@ import numpy as np
 import cv2 as cv
 from flask import Flask, render_template, request, redirect
 from flask_socketio import SocketIO
+from flask_login import LoginManager, login_user, logout_user, current_user, login_required
+from webpic_user import WebpicUser
 from werkzeug.utils import secure_filename
 
 # read configuration file
@@ -19,14 +21,18 @@ UPLOAD_FOLDER = config['FOLDERS']['upload']
 REDIRECT_ON_SAVE = int(config['BEHAVIOR']['redirect_on_save'])
 
 # prepare template parameters
-url = {
-    'home': SERVICE_URL,
+common = {
+    'title': config['BEHAVIOR']['title'],
+    'home_url': SERVICE_URL,
 }
 
 # prepare Flask
 app = Flask(__name__, static_url_path=f'{SERVICE_URL}/static')
 app.config['SECRET_KEY'] = os.urandom(40).hex()
-sock = SocketIO(app)
+sock = SocketIO(app, path=f'{SERVICE_URL}/socket.io')
+login_manager = LoginManager()
+login_manager.login_view = f'{SERVICE_URL}/auth'
+login_manager.init_app(app)
 
 # prepare folders
 if not pathlib.Path(UPLOAD_FOLDER).exists():
@@ -34,16 +40,51 @@ if not pathlib.Path(UPLOAD_FOLDER).exists():
 
 
 def get_page(page, **kwargs):
-    return render_template('index.jinja2', url=url, page=page, **kwargs)
+    return render_template('index.jinja2', common=common, page=page, **kwargs)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return WebpicUser(user_id)
 
 
 # Flask routes
+@app.route(f'{SERVICE_URL}/auth', methods=['GET', 'POST'])
+def auth():
+    """ GET: Show authentication form
+        POST: Authenticate user
+    """
+    uid = current_user.get_id()
+    if uid:
+        logout_user()
+        print(f'Log out {uid}')
+
+    if request.method == 'GET':
+        # TODO: redirect to requested url
+        return get_page('auth.jinja2')
+    elif request.method == 'POST':
+        # print(request.form)
+        username = request.form.get('username', None)
+        password = request.form.get('password', None)
+        remember = bool(request.form.get('remember', False))
+        # TODO: user verification
+        if username != 'testuser':
+            return {'fail': 'Wrong username or password'}
+
+        user = WebpicUser(username)
+        login_user(user, remember=remember)
+        print(f'Log in {user.get_id()}')
+        return {'success': SERVICE_URL}
+
+
 @app.route(SERVICE_URL)
+@login_required
 def index():
     return get_page('library.jinja2')
 
 
 @app.route(f'{SERVICE_URL}/upload', methods=['GET', 'POST'])
+@login_required
 def upload():
     """ GET: Show upload page
         POST: Receive new images and contours from client """
@@ -65,12 +106,14 @@ def upload():
 
 
 @app.route(f'{SERVICE_URL}/<path>')
+@login_required
 def coloring(path: str):
     return get_page('coloring.jinja2')
 
 
 # socket routes
 @sock.on('click')
+@login_required
 def on_canvas_click(point):
     # read contours
     contours = pickle.load(open('static/media/testpic_contours.pkl', 'rb'))

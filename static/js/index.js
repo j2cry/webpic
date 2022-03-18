@@ -1,4 +1,4 @@
-let socket = io();    // init socket connection
+let socket = io({path: common['home_url'] + '/socket.io'});    // init socket connection
 let loadingIndicator = document.getElementById('loading-indicator');
 
 // on document is ready
@@ -9,9 +9,9 @@ window.addEventListener('load',function () {
     }
 
     // on logout click
-    // document.getElementById('logoutBtn').onclick = function () {
-    //     console.log('logout clicked');
-    // }
+    document.getElementById('logoutBtn').onclick = function () {
+        window.location.href = common['home_url'] + '/auth';
+    }
 
     // on debug click
     document.getElementById('debugLink').onclick = function () {

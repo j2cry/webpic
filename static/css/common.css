@@ -35,7 +35,7 @@ input[type=range] {
     margin-left: 0.25em;
 }
 
-#loading-indicator {
+.centred-popup {
     position: fixed;
     display: flex;
     justify-content: center;
@@ -49,8 +49,12 @@ input[type=range] {
     z-index: 1020;
 }
 
-#loading-indicator img {
+.centred-popup img {
     width: 10vw;
     height: auto;
     z-index: 1025;
+}
+
+.auth-response-text {
+    color: #a52834;
 }
