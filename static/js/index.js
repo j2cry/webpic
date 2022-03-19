@@ -17,7 +17,5 @@ window.addEventListener('load',function () {
     document.getElementById('debugLink').onclick = function () {
         console.log('debug clicked');
     }
-
-    // hide loading indicator
-    loadingIndicator.hidden = true;
+    // TODO: check canvas compatibility
 });

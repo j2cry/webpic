@@ -1,18 +1,18 @@
-function drawPicture(ctx, sourcePath, filters) {
+function drawPicture(canvas, sourcePath, filters) {
     return new Promise((resolve, reject) => {
         let image = new Image();
         image.onload = function () {
             // TODO: add pre-scaling if size is more than required
-            ctx.canvas.width = image.width;
-            ctx.canvas.height = image.height;
-            ctx.drawImage(image, 0, 0);
+            canvas.width = image.width;
+            canvas.height = image.height;
+            canvas.getContext('2d').drawImage(image, 0, 0);
             // apply filters
             if (filters !== undefined) {
                 // parse parameters
                 let contoursOnly = filters['checkBlankBack'];
 
                 // init images
-                let originalImage = cv.imread(ctx.canvas);
+                let originalImage = cv.imread(canvas);
                 let contoursImage = new cv.Mat(originalImage.rows, originalImage.cols, originalImage.type(), [255,255,255,255]);
                 let filteredImage = new cv.Mat();
                 // parse filters
@@ -39,12 +39,13 @@ function drawPicture(ctx, sourcePath, filters) {
                 }
                 contours.delete();
                 hierarchy.delete();
-                cv.imshow(ctx.canvas, contoursOnly ? contoursImage : originalImage);
+                cv.imshow(canvas, contoursOnly ? contoursImage : originalImage);
 
                 // resolve
-                let filteredCanvas = document.createElement('canvas');
-                cv.imshow(filteredCanvas, filteredImage);
-                resolve(filteredCanvas.toDataURL('image/png'));
+                // let filteredCanvas = document.createElement('canvas');
+                // cv.imshow(filteredCanvas, filteredImage);
+                // resolve(filteredCanvas.toDataURL('image/png'));
+                resolve([contours, hierarchy])
                 // delete images
                 originalImage.delete();
                 filteredImage.delete();
@@ -57,22 +58,21 @@ function drawPicture(ctx, sourcePath, filters) {
     })
 }
 
-function drawContour(ctx, points, sourcePath) {
-    // TODO: draw contours based on filtered image downloaded from server
-    let image = new Image();
-    image.src = sourcePath;
-    image.onload = function () {
-        let pattern = ctx.createPattern(image, 'repeat');
-        ctx.save();
-        ctx.beginPath();
-        ctx.fillStyle = pattern;
-        ctx.moveTo(points[0][0][0], points[0][0][1])
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0][0], points[i][0][1]);
-        }
-        ctx.lineTo(points[0][0][0], points[0][0][1]);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-    }
-}
+// function drawContour(ctx, points, sourcePath) {
+//     let image = new Image();
+//     image.src = sourcePath;
+//     image.onload = function () {
+//         let pattern = ctx.createPattern(image, 'repeat');
+//         ctx.save();
+//         ctx.beginPath();
+//         ctx.fillStyle = pattern;
+//         ctx.moveTo(points[0][0][0], points[0][0][1])
+//         for (let i = 1; i < points.length; i++) {
+//             ctx.lineTo(points[i][0][0], points[i][0][1]);
+//         }
+//         ctx.lineTo(points[0][0][0], points[0][0][1]);
+//         ctx.closePath();
+//         ctx.fill();
+//         ctx.restore();
+//     }
+// }

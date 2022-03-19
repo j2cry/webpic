@@ -1,10 +1,8 @@
-import base64
+import json
 import pathlib
 import configparser
 import os
-import pickle
-import numpy as np
-import cv2 as cv
+import hashlib
 from flask import Flask, render_template, request, redirect, send_from_directory
 from flask_socketio import SocketIO
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
@@ -48,7 +46,7 @@ def load_user(user_id):
     return WebpicUser(user_id)
 
 
-# Flask routes
+# ============================= Flask routes =============================
 @app.route(f'{SERVICE_URL}/auth', methods=['GET', 'POST'])
 def auth():
     """ GET: Show authentication form
@@ -92,22 +90,23 @@ def upload():
         return get_page('upload.jinja2')
     elif request.method == 'POST':
         # check incoming data
-        source_file = request.files.get('source_file', None)
-        filter_file = request.form.get('filtered_image_data', None)
-        if not (source_file and filter_file) or not source_file.filename:
+        source_image = request.files.get('source', None)
+        filters = json.loads(request.form.get('filters', {}))
+
+        if not (source_image and filters) or not source_image.filename:
             return 'No file selected'
         # parse file name and path
         user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
         if not user_path.exists():
             os.mkdir(user_path.as_posix())
-        filename, extension = os.path.splitext(secure_filename(source_file.filename))
-        source_filename = f'{filename}_source{extension}'
-        filter_filename = f'{filename}_filter.png'
-        # save images
-        source_file.save(pathlib.Path(user_path, source_filename).as_posix())
-        with open(pathlib.Path(user_path, filter_filename).as_posix(), 'wb') as fd:
-            fd.write(base64.decodebytes(filter_file.split(',')[1].encode()))
-
+        # save
+        sfn = secure_filename(source_image.filename)
+        _, ext = os.path.splitext(sfn)
+        hash_name = hashlib.sha256(sfn.encode()).hexdigest()
+        image_path = user_path.joinpath(f'{hash_name}{ext}')
+        filters_path = user_path.joinpath(f'{hash_name}.json')
+        source_image.save(image_path.as_posix())
+        json.dump(filters, open(filters_path.as_posix(), 'w'))
         return redirect(SERVICE_URL) if REDIRECT_ON_SAVE else 'ok'
 
 
@@ -119,16 +118,22 @@ def get_image_at(username, filename):
     """
     if secure_filename(current_user.get_id()) != username:
         return get_page('error.jinja2', error_text="You are not allowed to view another user's files")
-    return send_from_directory(pathlib.Path('images', username).as_posix(), filename)
+    return send_from_directory(pathlib.Path('images', secure_filename(username)).as_posix(), filename)
 
 
-@app.route(f'{SERVICE_URL}/coloring-test')
+@app.route(f'{SERVICE_URL}/<hash_name>')
 @login_required
-def coloring():
+def coloring(hash_name):
+    user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
+    files = [f for f in os.listdir(user_path.as_posix()) if f.startswith(hash_name)]
+    if len(files) != 2:
+        return get_page('error.jinja2', error_text='Image is corrupted')
+
+    # return get_page('coloring.jinja2', files={'source': source_url, 'filter': filter_url})
     return get_page('coloring.jinja2')
 
 
-# socket routes
+# ============================= socket routes =============================
 @sock.on('get_library')
 @login_required
 def on_get_library():
@@ -138,37 +143,52 @@ def on_get_library():
     user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
     if not user_path.exists():
         return []
-    all_files = os.listdir(user_path.as_posix())
-    filter_files = [f[:f.rindex('_')] for f in all_files if '_filter.png' in f]
-    source_files = [pathlib.Path('/', SERVICE_URL, user_path, f).as_posix() for f in all_files
-                    if f[:f.rindex('_')] in filter_files and '_source.' in f]
-    return source_files
+    files = {os.path.splitext(f) for f in os.listdir(user_path.as_posix())}
+    filters = [fn for fn, ext in files if ext == '.json']
+    actual = [pathlib.Path('/', SERVICE_URL, user_path, f'{name}{ext}').as_posix()
+              for name, ext in files if (name in filters) and (ext != '.json')]
+
+    return actual
 
 
 @sock.on('remove_images')
 @login_required
-def on_remove_images(files):
-    """ Remove selected files """
-    username = current_user.get_id()
-    for source_file in files:
-        if (file := pathlib.Path('images', username, source_file)).exists():
-            os.remove(file.as_posix())
-        _, extension = os.path.splitext(source_file)
-        filter_file = source_file.replace(f'_source{extension}', '_filter.png')
-        if (file := pathlib.Path('images', username, filter_file)).exists():
-            os.remove(file.as_posix())
+def on_remove_images(hash_files):
+    """ Remove selected files and its ghosts """
+    user_path = pathlib.Path('images', secure_filename(current_user.get_id()))
+    # collect files by hash name and remove
+    for existing_file in os.listdir(user_path.as_posix()):
+        for hash_name in hash_files:
+            if existing_file.startswith(hash_name):
+                os.remove(user_path.joinpath(existing_file).as_posix())
 
 
-@sock.on('click')
+@sock.on('get_coloring_data')
 @login_required
-def on_canvas_click(point):
-    # read contours
-    contours = pickle.load(open('static/media/testpic_contours.pkl', 'rb'))
-    hierarchy = np.array(pickle.load(open('static/media/testpic_hierarchy.pkl', 'rb')))
-    # check max level collision
-    collision = np.where(np.array([cv.pointPolygonTest(ct, point, False) for ct in contours]) >= 0)[0]
-    contour_index = int(collision[hierarchy[0, collision, 3].argmax()]) if collision.size else -1
-    return contours[contour_index].tolist()
+def on_get_coloring_data(hash_name):
+    user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
+    files = [f for f in os.listdir(user_path.as_posix()) if f.startswith(hash_name)]
+
+    # parse file names
+    filters_file = hash_name + '.json'
+    files.remove(filters_file)
+    image_file = files.pop()
+    # parse paths
+    source_url = pathlib.Path('/', SERVICE_URL, user_path, image_file).as_posix()
+    filters = json.load(open(user_path.joinpath(filters_file).as_posix(), 'r'))
+    return {'source': source_url, 'filters': filters}
+
+
+# @sock.on('click')
+# @login_required
+# def on_canvas_click(point):
+#     # read contours
+#     contours = pickle.load(open('static/media/testpic_contours.pkl', 'rb'))
+#     hierarchy = np.array(pickle.load(open('static/media/testpic_hierarchy.pkl', 'rb')))
+#     # check max level collision
+#     collision = np.where(np.array([cv.pointPolygonTest(ct, point, False) for ct in contours]) >= 0)[0]
+#     contour_index = int(collision[hierarchy[0, collision, 3].argmax()]) if collision.size else -1
+#     return contours[contour_index].tolist()
 
 
 @sock.on('connect')
