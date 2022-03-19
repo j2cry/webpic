@@ -5,7 +5,7 @@ import os
 import pickle
 import numpy as np
 import cv2 as cv
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_from_directory
 from flask_socketio import SocketIO
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from webpic_user import WebpicUser
@@ -68,8 +68,8 @@ def auth():
         password = request.form.get('password', None)
         remember = bool(request.form.get('remember', False))
         # TODO: user verification
-        if username != 'testuser':
-            return {'fail': 'Wrong username or password'}
+        if not username:
+            return {'fail': 'Username cannot be empty'}
 
         user = WebpicUser(username)
         login_user(user, remember=remember)
@@ -93,16 +93,35 @@ def upload():
     elif request.method == 'POST':
         # check incoming data
         source_file = request.files.get('source_file', None)
-        filtered_image_data = request.form.get('filtered_image_data', None)
-        if not (source_file and filtered_image_data) or not source_file.filename:
+        filter_file = request.form.get('filtered_image_data', None)
+        if not (source_file and filter_file) or not source_file.filename:
             return 'No file selected'
+        # parse file name and path
+        user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
+        if not user_path.exists():
+            os.mkdir(user_path.as_posix())
+        full_filename = secure_filename(source_file.filename)
+        ext_index = full_filename.rindex(".")
+        filename, extension = full_filename[:ext_index], full_filename[ext_index:]
+        source_filename = f'{filename}_source{extension}'
+        filter_filename = f'{filename}_filter.png'
         # save images
-        filename = secure_filename(source_file.filename)
-        source_file.save(pathlib.Path(UPLOAD_FOLDER, f'source_{filename}').as_posix())
-        with open(pathlib.Path(UPLOAD_FOLDER, f'mask_{filename[:filename.rindex(".")]}.png').as_posix(), 'wb') as fd:
-            fd.write(base64.decodebytes(filtered_image_data.split(',')[1].encode()))
+        source_file.save(pathlib.Path(user_path, source_filename).as_posix())
+        with open(pathlib.Path(user_path, filter_filename).as_posix(), 'wb') as fd:
+            fd.write(base64.decodebytes(filter_file.split(',')[1].encode()))
 
         return redirect(SERVICE_URL) if REDIRECT_ON_SAVE else 'ok'
+
+
+@app.route(f'{SERVICE_URL}/images/<username>/<filename>')
+@login_required
+def get_image_at(username, filename):
+    """ Return images ONLY for current user
+        You are not allowed to browse images of another user
+    """
+    if secure_filename(current_user.get_id()) != username:
+        return get_page('error.jinja2', error_text="You are not allowed to view another user's files")
+    return send_from_directory(pathlib.Path('images', username).as_posix(), filename)
 
 
 @app.route(f'{SERVICE_URL}/<path>')
@@ -112,6 +131,20 @@ def coloring(path: str):
 
 
 # socket routes
+@sock.on('get_library')
+@login_required
+def on_get_library():
+    """ Collect and return files list for current user
+        Source file will be returned only if it has filter-file pair
+    """
+    user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
+    all_files = os.listdir(user_path.as_posix())
+    filter_files = [f[:f.rindex('_')] for f in all_files if '_filter.png' in f]
+    source_files = [pathlib.Path('/', SERVICE_URL, user_path, f).as_posix() for f in all_files
+                    if f[:f.rindex('_')] in filter_files and '_source.' in f]
+    return source_files
+
+
 @sock.on('click')
 @login_required
 def on_canvas_click(point):

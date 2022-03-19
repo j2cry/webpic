@@ -58,3 +58,8 @@ input[type=range] {
 .auth-response-text {
     color: #a52834;
 }
+
+.error-text {
+    color: honeydew;
+    font-size: 1.1em;
+}
