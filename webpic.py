@@ -100,9 +100,7 @@ def upload():
         user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
         if not user_path.exists():
             os.mkdir(user_path.as_posix())
-        full_filename = secure_filename(source_file.filename)
-        ext_index = full_filename.rindex(".")
-        filename, extension = full_filename[:ext_index], full_filename[ext_index:]
+        filename, extension = os.path.splitext(secure_filename(source_file.filename))
         source_filename = f'{filename}_source{extension}'
         filter_filename = f'{filename}_filter.png'
         # save images
@@ -124,9 +122,9 @@ def get_image_at(username, filename):
     return send_from_directory(pathlib.Path('images', username).as_posix(), filename)
 
 
-@app.route(f'{SERVICE_URL}/<path>')
+@app.route(f'{SERVICE_URL}/coloring-test')
 @login_required
-def coloring(path: str):
+def coloring():
     return get_page('coloring.jinja2')
 
 
@@ -138,11 +136,27 @@ def on_get_library():
         Source file will be returned only if it has filter-file pair
     """
     user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
+    if not user_path.exists():
+        return []
     all_files = os.listdir(user_path.as_posix())
     filter_files = [f[:f.rindex('_')] for f in all_files if '_filter.png' in f]
     source_files = [pathlib.Path('/', SERVICE_URL, user_path, f).as_posix() for f in all_files
                     if f[:f.rindex('_')] in filter_files and '_source.' in f]
     return source_files
+
+
+@sock.on('remove_images')
+@login_required
+def on_remove_images(files):
+    """ Remove selected files """
+    username = current_user.get_id()
+    for source_file in files:
+        if (file := pathlib.Path('images', username, source_file)).exists():
+            os.remove(file.as_posix())
+        _, extension = os.path.splitext(source_file)
+        filter_file = source_file.replace(f'_source{extension}', '_filter.png')
+        if (file := pathlib.Path('images', username, filter_file)).exists():
+            os.remove(file.as_posix())
 
 
 @sock.on('click')

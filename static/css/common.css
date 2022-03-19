@@ -25,6 +25,11 @@ header img {
     outline: 2px solid #0c63e4;
 }
 
+.pic-selected {
+    filter: grayscale(70%);
+    outline: 2px dotted #ffc107;
+}
+
 canvas {
     /*width: 100%;*/
     /*height: auto;*/
