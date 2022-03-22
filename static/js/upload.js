@@ -21,10 +21,14 @@ window.addEventListener('load', function () {
             selectedFile = this.files[0];
             // collect and apply filters
             let filters = collectFilters(filterInputs);
-            drawPicture(canvas, window.URL.createObjectURL(selectedFile), filters)
-                .then(() => {
-                    loadingIndicator.hidden = true;
-                });
+            let image = new Image();
+            image.onload = function () {
+                drawPicture(canvas, image, filters)
+                    .then(() => {
+                        loadingIndicator.hidden = true;
+                    });
+            }
+            image.src = window.URL.createObjectURL(selectedFile);
             // enable filter controls
             saveImageBtn.classList.remove('disabled');
             filterInputs.forEach(function (inputElement) {
@@ -38,10 +42,14 @@ window.addEventListener('load', function () {
                 loadingIndicator.hidden = false;
                 console.log(this.id, 'was set to', this.type !== 'checkbox' ? this.value : this.checked);
                 let filters = collectFilters(filterInputs);
-                drawPicture(canvas, window.URL.createObjectURL(selectedFile), filters)
-                    .then(() => {
-                        loadingIndicator.hidden = true;
-                    });
+                let image = new Image();
+                image.onload = function () {
+                    drawPicture(canvas, image, filters)
+                        .then(() => {
+                            loadingIndicator.hidden = true;
+                        });
+                }
+                image.src = window.URL.createObjectURL(selectedFile);
             }
         });
         loadingIndicator.hidden = true;
