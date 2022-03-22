@@ -26,11 +26,11 @@
                             <a id="libraryLink" class="nav-link active" href="{{ common['home_url'] }}">Library</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link disabled">Disabled</a>
+                            <a class="nav-link" href="{{ common['home_url'] }}/about">About</a>
                         </li>
-                        <li class="nav-item">
-                            <a id="debugLink" class="nav-link" href="#">Debug</a>
-                        </li>
+{#                        <li class="nav-item">#}
+{#                            <a id="debugLink" class="nav-link" href="#">Debug</a>#}
+{#                        </li>#}
                     </ul>
                     <button id="logoutBtn" class="btn btn-sm btn-danger">Logout</button>
                 </div>
@@ -44,7 +44,8 @@
 
     <footer class="bg-dark fixed-bottom text-center py-2">
         <span class="text-muted small">
-            &copy; Copyright 2022 fragarie
+            &copy; Copyright 2022 fragarie.
+            <a href="https://github.com/j2cry/webpic" class="link-secondary" target="_blank">Github</a>
         </span>
     </footer>
 

@@ -1,0 +1,2 @@
+This software is designed as an example and may contain flaws and/or errors, including critical ones.
+All materials related to this application are distributed under the MIT license.

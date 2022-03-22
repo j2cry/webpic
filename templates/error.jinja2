@@ -1,5 +1,8 @@
 <div class="centred-popup text-center">
-    <span class="error-text">{{ error_text }}</span>
+    <span class="error-text p-3">
+        {{ error_text }}
+        <a href="{{ common['home_url'] }}" class="nav-link link-warning">Back to the start</a>
+    </span>
 </div>
 
 <script src="{{ url_for('static', filename='js/error.js') }}"></script>

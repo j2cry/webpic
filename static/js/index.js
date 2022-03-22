@@ -14,8 +14,8 @@ window.addEventListener('load',function () {
     }
 
     // on debug click
-    document.getElementById('debugLink').onclick = function () {
-        console.log('debug clicked');
-    }
+    // document.getElementById('debugLink').onclick = function () {
+    //     console.log('debug clicked');
+    // }
     // TODO: check canvas compatibility
 });

@@ -133,6 +133,13 @@ def coloring(hash_name):
     return get_page('coloring.jinja2')
 
 
+@app.route(f'{SERVICE_URL}/about')
+def about():
+    with open('about.txt', 'r') as f:
+        about_text = f.read()
+    return get_page('error.jinja2', error_text=about_text)
+
+
 # ============================= socket routes =============================
 @sock.on('get_library')
 @login_required
@@ -177,18 +184,6 @@ def on_get_coloring_data(hash_name):
     source_url = pathlib.Path('/', SERVICE_URL, user_path, image_file).as_posix()
     filters = json.load(open(user_path.joinpath(filters_file).as_posix(), 'r'))
     return {'source': source_url, 'filters': filters}
-
-
-# @sock.on('click')
-# @login_required
-# def on_canvas_click(point):
-#     # read contours
-#     contours = pickle.load(open('static/media/testpic_contours.pkl', 'rb'))
-#     hierarchy = np.array(pickle.load(open('static/media/testpic_hierarchy.pkl', 'rb')))
-#     # check max level collision
-#     collision = np.where(np.array([cv.pointPolygonTest(ct, point, False) for ct in contours]) >= 0)[0]
-#     contour_index = int(collision[hierarchy[0, collision, 3].argmax()]) if collision.size else -1
-#     return contours[contour_index].tolist()
 
 
 @sock.on('connect')
