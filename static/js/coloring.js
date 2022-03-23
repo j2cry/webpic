@@ -10,12 +10,9 @@ window.addEventListener('load', function () {
         const fromIndex = window.location.href.lastIndexOf('/') + 1;
         socket.emit('get_coloring_data', window.location.href.substring(fromIndex), (data) => {
             const filters = data['filters'];
-            source.onload = function () {
-                drawPicture(canvas, source, filters)
-                    .then((value) => {
-                        [contours, hierarchy] = value;
-                        loadingIndicator.hidden = true;
-                    })
+            source.onload = async function () {
+                [contours, hierarchy] = await drawPicture(canvas, source, filters);
+                loadingIndicator.hidden = true;
             }
             source.src = data['source'];
         })
@@ -30,24 +27,27 @@ window.addEventListener('load', function () {
             }
 
             // Note that the designations "inner" and "outer" are used here in relation to the contour, not to the point
-            // let outerDist, innerDist = null;
-            // let outerIndex, innerIndex = null;
             let outerContoursIndex = [];
-            for (let i = 0; i < contours.size(); ++i) {
+            for (let i = 0; i < contours.size(); i++) {
                 const ci = contours.get(i);
                 // let dist = cv.pointPolygonTest(ci, new cv.Point(ev.offsetX, ev.offsetY), true);
                 const dist = cv.pointPolygonTest(ci, new cv.Point(ev.offsetX, ev.offsetY), false);
                 if (dist > 0)
                     outerContoursIndex.push(i);
             }
-            // search contours at the same hierarchy level
-            // TODO ...
-
-            console.log(outerContoursIndex)
+            const clickedIndex = outerContoursIndex[outerContoursIndex.length - 1];
+            // collect all children of clicked contour
+            let childContours = []
+            for (let i = 0; i < contours.size(); i++) {
+                const hi = hierarchy.intPtr(0, i);
+                if (hi[3] === clickedIndex)
+                    childContours.push(contours.get(i));
+            }
+            // console.log('children:', childContours)
+            // console.log('contours', outerContoursIndex)
 
             // fill clicked contour
-            // TODO how to pass to func outer/inner contours?
-            fillContour(canvas, source, contours.get(outerContoursIndex[outerContoursIndex.length - 1]));
+            fillContour(canvas, source, contours.get(clickedIndex), childContours);
         }
     }
 });

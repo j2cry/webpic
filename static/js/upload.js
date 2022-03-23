@@ -22,11 +22,9 @@ window.addEventListener('load', function () {
             // collect and apply filters
             let filters = collectFilters(filterInputs);
             let image = new Image();
-            image.onload = function () {
-                drawPicture(canvas, image, filters)
-                    .then(() => {
-                        loadingIndicator.hidden = true;
-                    });
+            image.onload = async () => {
+                await drawPicture(canvas, image, filters)
+                loadingIndicator.hidden = true;
             }
             image.src = window.URL.createObjectURL(selectedFile);
             // enable filter controls
@@ -43,11 +41,9 @@ window.addEventListener('load', function () {
                 console.log(this.id, 'was set to', this.type !== 'checkbox' ? this.value : this.checked);
                 let filters = collectFilters(filterInputs);
                 let image = new Image();
-                image.onload = function () {
-                    drawPicture(canvas, image, filters)
-                        .then(() => {
-                            loadingIndicator.hidden = true;
-                        });
+                image.onload = async () => {
+                    await drawPicture(canvas, image, filters);
+                    loadingIndicator.hidden = true;
                 }
                 image.src = window.URL.createObjectURL(selectedFile);
             }
@@ -56,7 +52,7 @@ window.addEventListener('load', function () {
     }
 
     // save button click
-    saveImageBtn.onclick = function () {
+    saveImageBtn.onclick = async () => {
         loadingIndicator.hidden = false;
         // send files to the server
         const formData = new FormData();
@@ -64,16 +60,13 @@ window.addEventListener('load', function () {
         filters['checkBlankBack'] = true;
         formData.append('source', selectedFile);
         formData.append('filters', JSON.stringify(filters));
-        fetch(window.location.href, {
+        const response = await fetch(window.location.href, {
             method: 'POST',
             body: formData
-        }).then(response => {
-            if (response.redirected)
-                window.location.href = response.url;
-            loadingIndicator.hidden = true;
-        }).catch(err => {
-            console.error(err);
         });
+        if (response.redirected)
+            window.location.href = response.url;
+        loadingIndicator.hidden = true;
     }
 });
 

@@ -49,19 +49,27 @@ function drawPicture(canvas, sourceImage, filters) {
     })
 }
 
-function fillContour(canvas, sourceImage, contour) {
+function fillContour(canvas, sourceImage, contour, children) {
     let context = canvas.getContext('2d');
     let pattern = context.createPattern(sourceImage, 'repeat');
     context.save();
     context.beginPath();
     context.fillStyle = pattern;
 
-    context.moveTo(contour.data32S[0], contour.data32S[1]);
-    for (let i = 2; i < contour.data32S.length; i += 2) {
-        context.lineTo(contour.data32S[i], contour.data32S[i + 1])
+    drawContour(context, contour);
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        drawContour(context, child);
     }
 
     context.closePath();
     context.fill();
     context.restore();
+}
+
+function drawContour(context, contour) {
+    context.moveTo(contour.data32S[0], contour.data32S[1]);
+    for (let i = 2; i < contour.data32S.length; i += 2) {
+        context.lineTo(contour.data32S[i], contour.data32S[i + 1])
+    }
 }

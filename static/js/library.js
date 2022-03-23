@@ -31,7 +31,7 @@ function refreshLibrary() {
 }
 
 // add on document load listener
-window.addEventListener('load', function () {
+window.addEventListener('load', async () => {
     document.getElementById('addNewImageBtn').onclick = function () {
         window.location.href = window.location.pathname + '/upload';
     }
@@ -46,19 +46,15 @@ window.addEventListener('load', function () {
             selected.push(image.src.substring(fromIndex, toIndex));
         });
         // send to the server
-        socket.emit('remove_images', selected, () => {
-            refreshLibrary()
-                .then(() => {
-                    removeBtn.disabled = true;
-                });
+        socket.emit('remove_images', selected, async () => {
+            await refreshLibrary();
+            removeBtn.disabled = true;
         });
     }
 
     // update library
-    refreshLibrary()
-        .then(() => {
-            loadingIndicator.hidden = true;
-        });
+    await refreshLibrary();
+    loadingIndicator.hidden = true;
 });
 
 
