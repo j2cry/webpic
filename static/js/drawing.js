@@ -1,6 +1,5 @@
 function drawPicture(canvas, sourceImage, filters) {
     return new Promise((resolve, reject) => {
-        // TODO: add pre-scaling if size is more than required
         canvas.width = sourceImage.width;
         canvas.height = sourceImage.height;
         canvas.getContext('2d').drawImage(sourceImage, 0, 0);
@@ -25,7 +24,6 @@ function drawPicture(canvas, sourceImage, filters) {
             // cv.cvtColor(originalImage, filteredImage, cv.COLOR_RGBA2GRAY, 0);
             low.delete();
             high.delete();
-            // TODO: how to make `master` contour?
 
             // find contours and draw
             let contours = new cv.MatVector();
@@ -56,7 +54,15 @@ function fillContour(canvas, sourceImage, contour, children) {
     context.beginPath();
     context.fillStyle = pattern;
 
-    drawContour(context, contour);
+    if (contour !== null)
+        drawContour(context, contour);
+    else {
+        context.moveTo(0, 0)
+        context.lineTo(sourceImage.width, 0);
+        context.lineTo(sourceImage.width, sourceImage.height);
+        context.lineTo(0, sourceImage.height);
+        context.lineTo(0, 0);
+    }
     for (let i = 0; i < children.length; i++) {
         const child = children[i];
         drawContour(context, child);

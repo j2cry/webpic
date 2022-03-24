@@ -16,7 +16,6 @@ window.addEventListener('load', function () {
             }
             source.src = data['source'];
         })
-
         // on context click event
         canvas.onclick = function (ev) {
             console.log('canvas onclick caught', ev.offsetX, ':', ev.offsetY);
@@ -25,7 +24,6 @@ window.addEventListener('load', function () {
                 alert('Critical error!');
                 return
             }
-
             // Note that the designations "inner" and "outer" are used here in relation to the contour, not to the point
             let outerContoursIndex = [];
             for (let i = 0; i < contours.size(); i++) {
@@ -35,7 +33,7 @@ window.addEventListener('load', function () {
                 if (dist > 0)
                     outerContoursIndex.push(i);
             }
-            const clickedIndex = outerContoursIndex[outerContoursIndex.length - 1];
+            const clickedIndex = outerContoursIndex.length ? outerContoursIndex[outerContoursIndex.length - 1] : -1;
             // collect all children of clicked contour
             let childContours = []
             for (let i = 0; i < contours.size(); i++) {
@@ -43,11 +41,8 @@ window.addEventListener('load', function () {
                 if (hi[3] === clickedIndex)
                     childContours.push(contours.get(i));
             }
-            // console.log('children:', childContours)
-            // console.log('contours', outerContoursIndex)
-
             // fill clicked contour
-            fillContour(canvas, source, contours.get(clickedIndex), childContours);
+            fillContour(canvas, source, clickedIndex === -1 ? null : contours.get(clickedIndex), childContours);
         }
     }
 });
