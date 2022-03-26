@@ -1,0 +1,23 @@
+version: "3"
+services:
+  webpic-app:
+    image: webpic_image
+    container_name: webpic_app
+    expose:
+      - 21333
+    volumes:
+      - /webpic/conf.d:/webpic_app/conf.d
+      - /webpic/storage:/webpic_app/images
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.webpic-app.rule=PathPrefix(`/webpic`)
+      - traefik.http.services.webpic-sticky-coockie.loadbalancer.sticky=true
+      - traefik.http.services.webpic-sticky-coockie.loadBalancer.sticky.cookie.name=webpic-sticky-cookie
+      - traefik.http.services.webpic-sticky-coockie.loadBalancer.sticky.cookie.httpOnly=true
+      - traefik.http.services.webpic-sticky-coockie.loadBalancer.sticky.cookie.secure=true
+    networks:
+      - sql-net
+
+networks:
+  sql-net:
+    external: true

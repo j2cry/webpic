@@ -1,5 +1,6 @@
 [URLS]
 host = 0.0.0.0
+domains = ["fragarie.dev"]
 port = 21333
 service = webpic
 

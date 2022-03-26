@@ -4,7 +4,7 @@ import configparser
 import os
 import hashlib
 import bcrypt
-from flask import Flask, render_template, request, redirect, send_from_directory, make_response
+from flask import Flask, render_template, request, send_from_directory, make_response
 from flask_socketio import SocketIO
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from webpic_user import WebpicUser
@@ -31,7 +31,13 @@ common = {
 # prepare Flask
 app = Flask(__name__, static_url_path=f'{SERVICE_URL}/static')
 app.config['SECRET_KEY'] = os.urandom(40).hex()
-sock = SocketIO(app, path=f'{SERVICE_URL}/socket.io')
+app.config['PREFERRED_URL_SCHEME'] = 'https'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+origins = [f'http://localhost:{PORT}']
+domains = json.loads(config['URLS']['domains'])
+# origins.extend([f'http://{dom}' for dom in domains])
+origins.extend([f'https://{dom}' for dom in domains])
+sock = SocketIO(app, path=f'{SERVICE_URL}/socket.io', cors_allowed_origins=origins)
 login_manager = LoginManager()
 login_manager.login_view = f'{SERVICE_URL}/auth'
 login_manager.init_app(app)
@@ -156,7 +162,7 @@ def upload():
         with open(image_path.as_posix(), 'wb') as f:
             f.write(source_image_text)
         json.dump(filters, open(filters_path.as_posix(), 'w'))
-        return redirect(SERVICE_URL) if REDIRECT_ON_SAVE else {'ok': ''}
+        return {'success': SERVICE_URL if REDIRECT_ON_SAVE else ''}
 
 
 @app.route(f'{SERVICE_URL}/images/<username>/<filename>')

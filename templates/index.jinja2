@@ -61,8 +61,8 @@
         <img src="{{ url_for('static', filename='icons/loading.svg') }}" alt="Loading...">
     </div>
 
-	<script src="{{ url_for('static', filename='dependencies/bootstrap/bootstrap.bundle.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='dependencies/socket-io/socket.io.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='dependencies/bootstrap/bootstrap.bundle.min.js') }}" referrerpolicy="no-referrer"></script>
+	<script src="{{ url_for('static', filename='dependencies/socket-io/socket.io.min.js') }}" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" charset="utf-8">
         let common = {{ common|tojson|safe }}
     </script>

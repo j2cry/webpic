@@ -13,6 +13,8 @@ window.addEventListener('load', function () {
     const saveImageBtn = document.getElementById('saveImageBtn');
     const filterInputs = document.querySelectorAll('input[type=range],input[type=checkbox]');
     const canvas = document.getElementById('preview');
+    let image = null;
+    let filters = {}
 
      // wait until CV is REALLY initialized ???
     cv.onRuntimeInitialized = function () {
@@ -20,11 +22,13 @@ window.addEventListener('load', function () {
         document.getElementById('imagePathInput').onchange = function () {
             loadingIndicator.hidden = false;
             errorText.hidden = true;
+            if (selectedFile !== null) {
+                window.URL.revokeObjectURL(image.src);
+            }
+            image = new Image();
             selectedFile = this.files[0];
-            let fSize = selectedFile.size;      // bytes
             // collect and apply filters
-            let filters = collectFilters(filterInputs);
-            let image = new Image();
+            filters = collectFilters(filterInputs);
             image.onload = async () => {
                 await drawPicture(canvas, image, filters)
                 loadingIndicator.hidden = true;
@@ -39,16 +43,12 @@ window.addEventListener('load', function () {
 
         // on filters change
         filterInputs.forEach(function (inputElement) {
-            inputElement.onchange = function () {
+            inputElement.onchange = async function() {
                 loadingIndicator.hidden = false;
                 console.log(this.id, 'was set to', this.type !== 'checkbox' ? this.value : this.checked);
-                let filters = collectFilters(filterInputs);
-                let image = new Image();
-                image.onload = async () => {
-                    await drawPicture(canvas, image, filters);
-                    loadingIndicator.hidden = true;
-                }
-                image.src = window.URL.createObjectURL(selectedFile);
+                filters = collectFilters(filterInputs);
+                await drawPicture(canvas, image, filters);
+                loadingIndicator.hidden = true;
             }
         });
         loadingIndicator.hidden = true;
@@ -63,19 +63,17 @@ window.addEventListener('load', function () {
         filters['checkBlankBack'] = true;
         formData.append('source', selectedFile);
         formData.append('filters', JSON.stringify(filters));
+        // TODO upload through socket?
         const response = await fetch(window.location.href, {
             method: 'POST',
             body: formData
         });
-        if (response.redirected)
-            window.location.href = response.url;
-        else {
-            const data = await response.json();
-            if (data['fail']) {
-                errorText.innerText = data['fail'];
-                errorText.hidden = false;
-            }
-        }
+        const data = await response.json();
+        if (data['fail']) {
+            errorText.innerText = data['fail'];
+            errorText.hidden = false;
+        } else if (data['success'])
+            window.location.href = String(data['success']);
         loadingIndicator.hidden = true;
     }
 });

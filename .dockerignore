@@ -6,3 +6,6 @@ TODO.txt
 /conf.d/*
 !conf.d/webpic.cnf
 /docker/
+.gitignore
+.dockerignore
+dockerfile

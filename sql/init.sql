@@ -1,0 +1,5 @@
+CREATE DATABASE IF NOT EXISTS webpic;
+USE webpic;
+
+CREATE USER IF NOT EXISTS 'webapp'@'%' IDENTIFIED BY 'webapp#Sf8^#D^7rSQ4>Nst';
+GRANT SELECT, INSERT, UPDATE, DELETE ON webpic.* TO 'webapp'@'%';

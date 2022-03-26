@@ -9,9 +9,11 @@ window.addEventListener('load',function () {
     }
 
     // on logout click
-    document.getElementById('logoutBtn').onclick = function () {
-        window.location.href = common['home_url'] + '/auth';
-    }
+    let logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn)
+        logoutBtn.onclick = function () {
+            window.location.href = common['home_url'] + '/auth';
+        }
 
     // on debug click
     // document.getElementById('debugLink').onclick = function () {
