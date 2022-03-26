@@ -44,8 +44,9 @@ class WebpicDatabase:
                 break
             except (errors.PoolError, errors.DatabaseError):
                 print(f'SQL: connection on {host} failed')
-        self.connection = self.pool.get_connection()
-        self.cursor = self.connection.cursor()
+        if self.pool:
+            self.connection = self.pool.get_connection()
+            self.cursor = self.connection.cursor()
 
     @reconnect_from_pool
     def get_user(self, name):
