@@ -7,21 +7,32 @@ window.addEventListener('load', function () {
     }
 
     document.getElementById('submitBtn').onclick = async () => {
-        const response = await fetch(window.location.href, {
-            method: 'POST',
-            body: new FormData(document.querySelector('form'))
-        });
-        const data = await response.json();
+        let authFormData = new FormData(document.querySelector('form'));
+        await postAuthForm(authFormData);
+    }
 
-        let failText = data['fail'];
-        let redirectURL = String(data['success']);
-        if (failText) {
-            let authResponse = document.getElementById('auth-response');
-            authResponse.innerText = failText;
-            authResponse.hidden = false;
-        } else if (redirectURL) {
-            window.location.href = redirectURL;
-        }
+    document.getElementById('registerBtn').onclick = async () => {
+        let authFormData = new FormData(document.querySelector('form'));
+        authFormData.set('register', 'true');
+        await postAuthForm(authFormData);
     }
     loadingIndicator.hidden = true;
 })
+
+async function postAuthForm(formData) {
+    const response = await fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    });
+    const data = await response.json();
+
+    let failText = data['fail'];
+    let redirectURL = String(data['success']);
+    if (failText) {
+        let authResponse = document.getElementById('auth-response');
+        authResponse.innerText = failText;
+        authResponse.hidden = false;
+    } else if (redirectURL) {
+        window.location.href = redirectURL;
+    }
+}

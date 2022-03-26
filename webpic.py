@@ -55,6 +55,10 @@ sql = WebpicDatabase(**sql_config)
 if not sql.pool:
     exit('Fatal SQL connection error')
 
+# if not sql.set_user({'name': 'testuser', 'pwd': b'$2b$05$uC95hBzzqrpj8crkUvjZVuW8S0loOgwKFc63FntZjzr9HxXMOMWAe'}):
+#     print('failed')
+# exit('breakpoint')
+
 
 def get_page(page, **kwargs):
     return render_template('index.jinja2', common=common, page=page, **kwargs)
@@ -84,14 +88,22 @@ def auth():
         username = request.form.get('username', None)
         password = request.form.get('password', '').encode()
         remember = bool(request.form.get('remember', False))
+        register = bool(request.form.get('register', False))
         if not username:
             return {'fail': 'Username cannot be empty'}
+        if not password:
+            return {'fail': 'Password cannot be empty'}
 
         user_settings = sql.get_user(username)
-        if not user_settings:
-            return {'fail': 'Wrong username or password'}
-        if not user_settings['active']:
-            return {'fail': 'This account is disabled'}
+        if register ^ bool(user_settings):
+            if register:
+                sql.set_user({'name': username, 'pwd': password})
+                user_settings = sql.get_user(username)
+            elif not user_settings['active']:
+                return {'fail': 'This account is disabled'}
+        else:
+            return {'fail': 'User already exists' if user_settings else 'Wrong username or password'}
+
         hash_pwd = bcrypt.hashpw(password, user_settings['pwd'][:29])
         if hash_pwd != user_settings['pwd']:
             return {'fail': 'Wrong username or password'}
