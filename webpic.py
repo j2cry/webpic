@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 
 # read configuration file
 config = configparser.ConfigParser()
-config.read('webpic.conf')
+config.read('conf.d/webpic.conf')
 HOST = config['URLS']['host']
 PORT = int(config['URLS']['port'])
 SERVICE_URL = pathlib.Path('/', config['URLS']['service']).as_posix()
