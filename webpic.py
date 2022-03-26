@@ -55,12 +55,10 @@ sql = WebpicDatabase(**sql_config)
 if not sql.pool:
     exit('Fatal SQL connection error')
 
-# if not sql.set_user({'name': 'testuser', 'pwd': b'$2b$05$uC95hBzzqrpj8crkUvjZVuW8S0loOgwKFc63FntZjzr9HxXMOMWAe'}):
-#     print('failed')
-# exit('breakpoint')
-
 
 def get_page(page, **kwargs):
+    if uid := current_user.get_id():
+        kwargs['username'] = uid
     return render_template('index.jinja2', common=common, page=page, **kwargs)
 
 

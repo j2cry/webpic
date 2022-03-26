@@ -68,3 +68,15 @@ input[type=range] {
     color: honeydew;
     font-size: 1.1em;
 }
+
+#userMenuBtn {
+    min-width: 5.5em;
+}
+
+#userMenuBtn.dropdown-toggle::after {
+    display:none;
+}
+
+.dropdown-menu {
+    min-width: auto;
+}
