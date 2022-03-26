@@ -3,15 +3,17 @@ import pathlib
 import configparser
 import os
 import hashlib
+import bcrypt
 from flask import Flask, render_template, request, redirect, send_from_directory, make_response
 from flask_socketio import SocketIO
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from webpic_user import WebpicUser
 from werkzeug.utils import secure_filename
+from database import WebpicDatabase
 
 # read configuration file
 config = configparser.ConfigParser()
-config.read('conf.d/webpic.conf')
+config.read('conf.d/webpic.cnf')
 HOST = config['URLS']['host']
 PORT = int(config['URLS']['port'])
 SERVICE_URL = pathlib.Path('/', config['URLS']['service']).as_posix()
@@ -37,6 +39,21 @@ login_manager.init_app(app)
 # prepare folders
 if not pathlib.Path(UPLOAD_FOLDER).exists():
     os.mkdir(UPLOAD_FOLDER)
+
+# prepare SQL
+sql_config = {
+    'host': json.loads(config['SQL']['hosts']),
+    'port': int(config['SQL']['port']),
+    'database': config['SQL']['database'],
+    'username': config['SQL']['username'],
+    'password': config['SQL']['password'],
+    'ssl_ca': config['SQL']['ssl_ca'],
+    'ssl_cert': config['SQL']['ssl_cert'],
+    'ssl_key': config['SQL']['ssl_key'],
+}
+sql = WebpicDatabase(**sql_config)
+if not sql.pool:
+    exit('Fatal SQL connection error')
 
 
 def get_page(page, **kwargs):
@@ -65,13 +82,21 @@ def auth():
     elif request.method == 'POST':
         # print(request.form)
         username = request.form.get('username', None)
-        password = request.form.get('password', None)
+        password = request.form.get('password', '').encode()
         remember = bool(request.form.get('remember', False))
-        # TODO: user verification
         if not username:
             return {'fail': 'Username cannot be empty'}
 
-        user = WebpicUser(username)
+        user_settings = sql.get_user(username)
+        if not user_settings:
+            return {'fail': 'Wrong username or password'}
+        if not user_settings['active']:
+            return {'fail': 'This account is disabled'}
+        hash_pwd = bcrypt.hashpw(password, user_settings['pwd'][:29])
+        if hash_pwd != user_settings['pwd']:
+            return {'fail': 'Wrong username or password'}
+
+        user = WebpicUser(user_settings['name'])
         login_user(user, remember=remember)
         print(f'Log in {user.get_id()}')
         return {'success': SERVICE_URL}

@@ -1,0 +1,23 @@
+[URLS]
+host = 0.0.0.0
+port = 21333
+service = webpic
+
+[FOLDERS]
+upload = images
+
+[BEHAVIOR]
+title = Webpic
+redirect_on_save = 1
+max_file_size = 1048576
+user_capacity = 5242880
+
+[SQL]
+hosts = ["webpic_sql", "sql_data", "localhost"]
+port = 3306
+username = webapp
+password = webapp#Sf8^#D^7rSQ4>Nst
+database = webpic
+ssl_ca = conf.d/ca.pem
+ssl_cert = conf.d/client-cert.pem
+ssl_key = conf.d/client-key.pem
