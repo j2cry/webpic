@@ -3,7 +3,7 @@ import pathlib
 import configparser
 import os
 import hashlib
-from flask import Flask, render_template, request, redirect, send_from_directory
+from flask import Flask, render_template, request, redirect, send_from_directory, make_response
 from flask_socketio import SocketIO
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from webpic_user import WebpicUser
@@ -17,6 +17,8 @@ PORT = int(config['URLS']['port'])
 SERVICE_URL = pathlib.Path('/', config['URLS']['service']).as_posix()
 UPLOAD_FOLDER = config['FOLDERS']['upload']
 REDIRECT_ON_SAVE = int(config['BEHAVIOR']['redirect_on_save'])
+MAX_FILE_SIZE = int(config['BEHAVIOR']['max_file_size'])
+USER_CAPACITY = int(config['BEHAVIOR']['user_capacity'])
 
 # prepare template parameters
 common = {
@@ -94,20 +96,32 @@ def upload():
         filters = json.loads(request.form.get('filters', {}))
 
         if not (source_image and filters) or not source_image.filename:
-            return 'No file selected'
-        # parse file name and path
+            return make_response({'fail': 'No file selected'})
+
+        source_image_text = source_image.read()
+        file_size = len(source_image_text)
+        if file_size > MAX_FILE_SIZE:
+            return make_response({'fail': 'The max. allowed file size has been exceeded.'})
+
+        # get user path
         user_path = pathlib.Path(UPLOAD_FOLDER, secure_filename(current_user.get_id()))
         if not user_path.exists():
             os.mkdir(user_path.as_posix())
-        # save
+        else:
+            current_user_capacity = sum([os.path.getsize(user_path.joinpath(fn).as_posix())
+                                         for fn in os.listdir(user_path.as_posix())])
+            if current_user_capacity + file_size > USER_CAPACITY:
+                return make_response({'fail': 'The max. storage capacity has been reached.'})
+        # parse filename and save
         sfn = secure_filename(source_image.filename)
         _, ext = os.path.splitext(sfn)
         hash_name = hashlib.sha256(sfn.encode()).hexdigest()
         image_path = user_path.joinpath(f'{hash_name}{ext}')
         filters_path = user_path.joinpath(f'{hash_name}.json')
-        source_image.save(image_path.as_posix())
+        with open(image_path.as_posix(), 'wb') as f:
+            f.write(source_image_text)
         json.dump(filters, open(filters_path.as_posix(), 'w'))
-        return redirect(SERVICE_URL) if REDIRECT_ON_SAVE else 'ok'
+        return redirect(SERVICE_URL) if REDIRECT_ON_SAVE else {'ok': ''}
 
 
 @app.route(f'{SERVICE_URL}/images/<username>/<filename>')

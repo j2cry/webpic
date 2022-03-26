@@ -8,6 +8,7 @@ function collectFilters(filterInputs) {
 
 // add on document load listener
 window.addEventListener('load', function () {
+    let errorText = document.getElementById('upload-err-text');
     let selectedFile = null;
     const saveImageBtn = document.getElementById('saveImageBtn');
     const filterInputs = document.querySelectorAll('input[type=range],input[type=checkbox]');
@@ -18,7 +19,9 @@ window.addEventListener('load', function () {
         // on file input change
         document.getElementById('imagePathInput').onchange = function () {
             loadingIndicator.hidden = false;
+            errorText.hidden = true;
             selectedFile = this.files[0];
+            let fSize = selectedFile.size;      // bytes
             // collect and apply filters
             let filters = collectFilters(filterInputs);
             let image = new Image();
@@ -66,6 +69,13 @@ window.addEventListener('load', function () {
         });
         if (response.redirected)
             window.location.href = response.url;
+        else {
+            const data = await response.json();
+            if (data['fail']) {
+                errorText.innerText = data['fail'];
+                errorText.hidden = false;
+            }
+        }
         loadingIndicator.hidden = true;
     }
 });
