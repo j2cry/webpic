@@ -18,4 +18,10 @@ window.addEventListener('load',function () {
     //     console.log('debug clicked');
     // }
     // TODO: check canvas compatibility
+
+    socket.on('disconnect', () => {
+        loadingIndicator.innerText = 'Connection lost. Reload the page'
+        loadingIndicator.hidden = false;
+    })
+
 });
