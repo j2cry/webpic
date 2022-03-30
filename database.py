@@ -10,14 +10,15 @@ def reconnect_from_pool(func):
     def wrapped(*args, **kwargs):
         self = args[0]
         try:
-            self.cursor.execute('SELECT 1')
-            self.cursor.fetchall()
-        except errors.DatabaseError:
-            self.cursor.close()
-            self.connection.close()
             self.connection = self.pool.get_connection()
             self.cursor = self.connection.cursor()
-        return func(*args, **kwargs)
+        except (errors.DatabaseError, errors.ProgrammingError) as e:
+            print(e)
+            return 'cannot establish SQL connection'
+        result = func(*args, **kwargs)
+        self.cursor.close()
+        self.connection.close()
+        return result
     return wrapped
 
 
@@ -38,7 +39,7 @@ class WebpicDatabase:
         host_list = config.pop('host', ['localhost'])
         for host in host_list:
             try:
-                self.pool = MySQLConnectionPool(pool_name=self.POOL_NAME, pool_size=1,
+                self.pool = MySQLConnectionPool(pool_name=self.POOL_NAME, pool_size=5,
                                                 host=host, **config)
                 print(f'SQL: connected on {host}')
                 break

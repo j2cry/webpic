@@ -31,7 +31,7 @@ common = {
 # prepare Flask
 app = Flask(__name__, static_url_path=f'{SERVICE_URL}/static')
 app.config['SECRET_KEY'] = os.urandom(40).hex()
-app.config['PREFERRED_URL_SCHEME'] = 'https'
+# app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 origins = [f'http://localhost:{PORT}']
 domains = json.loads(config['URLS']['domains'])
